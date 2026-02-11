@@ -1,25 +1,44 @@
-import { Injectable, UnauthorizedException } from "@nestjs/common";
-import { JwtService } from "@nestjs/jwt";
-import { UsersService } from "src/users/users.service";
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { RegisterDto } from "./dto/auth.dto";
+import { RegisterDto } from './dto/auth.dto';
+import { UsersService } from 'src/users/users.service';
+import { PrismaService } from 'src/core/prisma/prisma.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
+    private prisma: PrismaService,
   ) {}
 
-  async register(dto:RegisterDto) {
+  async register(dto: RegisterDto) {
+    const existing = await this.prisma.user.findUnique({
+      where: { email: dto.email },
+    });
+
+    if (existing) {
+      throw new BadRequestException("Email allaqachon ro'yxatdan o'tgan");
+    }
+
     const hashed = await bcrypt.hash(dto.password, 10);
 
-    const user = await this.usersService.createUser({username:dto.username, password:hashed, email:dto.email});
+    const user = await this.prisma.user.create({
+      data: {
+        email: dto.email,
+        username: dto.username,
+        password: hashed,
+      },
+    });
 
-    const payload = { id: user.id, email: user.email };
-    const access_token = this.jwtService.sign(payload);
+    const token = this.jwtService.sign({ sub: user.id, email: user.email });
 
-    return { access_token };
+    return { user, token };
   }
 
   async login(email: string, password: string) {
