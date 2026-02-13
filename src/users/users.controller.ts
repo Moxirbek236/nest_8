@@ -12,12 +12,19 @@ import {
 import { UsersService } from './users.service';
 import { AuthGuard } from 'src/common/guards/auth.guard';
 import { UpdateUserDto } from './dto/user.dto';
+import {RolesGuard} from ".././common/guards/role.guard.js"
+import { Roles } from 'src/common/decorators/roles.decorator';
+import { Role } from 'src/common/enums/role.enum';
+import { ApiTags } from '@nestjs/swagger';
+
+@ApiTags('Users')
 @Controller('users')
-@UseGuards(AuthGuard)
+@UseGuards(AuthGuard, RolesGuard)
 export class UsersController {
   constructor(private usersService: UsersService) {}
 
   @Get()
+  @Roles(Role.ADMIN, Role.SUPERADMIN)
   async getAll() {
     return this.usersService.findAll();
   }

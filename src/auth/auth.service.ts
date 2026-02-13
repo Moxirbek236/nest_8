@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  Body,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -17,8 +18,8 @@ export class AuthService {
     private prisma: PrismaService,
   ) {}
 
-  async register(dto: RegisterDto) {
-    const existing = await this.prisma.user.findUnique({
+  async register(@Body() dto) {
+    const existing = await this.prisma.staff.findUnique({
       where: { email: dto.email },
     });
 
@@ -28,15 +29,19 @@ export class AuthService {
 
     const hashed = await bcrypt.hash(dto.password, 10);
 
-    const user = await this.prisma.user.create({
+    const user = await this.prisma.staff.create({
       data: {
         email: dto.email,
         username: dto.username,
         password: hashed,
+        firstName: dto.firstName,
+        position: dto.position,
+        role: dto.role,
+        lastName: dto.lastName,
       },
     });
 
-    const token = this.jwtService.sign({ sub: user.id, email: user.email });
+    const token = this.jwtService.sign({ sub: user.id, email: user.email, role : user.role });
 
     return { user, token };
   }
