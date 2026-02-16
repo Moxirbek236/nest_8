@@ -2,12 +2,13 @@ import {
   BadRequestException,
   Body,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { RegisterDto } from './dto/auth.dto';
-import { UsersService } from 'src/users/users.service';
+import { UsersService } from 'src/modules/users/users.service';
 import { PrismaService } from 'src/core/prisma/prisma.service';
 
 @Injectable()
@@ -36,8 +37,8 @@ export class AuthService {
         last_name: dto.last_name,
         password: hashed,
         phone: dto.phone,
-        role: dto.role,
         address: dto.address,
+        role: `ADMIN`,
       },
     });
 
@@ -53,7 +54,15 @@ export class AuthService {
     const valid = await bcrypt.compare(password, user.password);
     if (!valid) throw new UnauthorizedException('Invalid credentials');
 
-    const payload = { id: user.id, email: user.email };
+    const payload = { id: user.id, email: user.email, role: user.role };
     return { access_token: this.jwtService.sign(payload) };
+  }
+
+    async getMe(id: number) {
+    const user = await this.prisma.user.findUnique({ where: { id } });
+    console.log(user);
+    
+    if (!user) throw new NotFoundException('User not found');
+    return {...user, password: null };
   }
 }

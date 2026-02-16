@@ -7,16 +7,17 @@ import {
   ParseIntPipe,
   UseGuards,
   Put,
+  Req,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { AuthGuard } from 'src/common/guards/auth.guard';
 import { UpdateUserDto } from './dto/user.dto';
-import { RolesGuard } from '.././common/guards/role.guard.js';
+import { RolesGuard } from '../../common/guards/role.guard.js';
 import { Roles } from 'src/common/decorators/roles.decorator';
-import { Role } from 'src/common/enums/role.enum';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { Role } from '@prisma/client';
 
-@ApiTags('Users')
+@ApiTags('Admins')
 @Controller('users')
 @UseGuards(AuthGuard, RolesGuard)
 export class UsersController {
@@ -25,28 +26,28 @@ export class UsersController {
   @Get()
   @Roles(Role.ADMIN, Role.SUPERADMIN)
   @ApiBearerAuth()
-  async getAll() {
-    return this.usersService.findAll();
+  async getAllUsers() {
+    return this.usersService.findAllAdmins();
   }
 
-  @Roles(Role.ADMIN, Role.SUPERADMIN, Role.USER)
+  @Roles(Role.ADMIN, Role.SUPERADMIN, Role.TEACHER)
   @ApiBearerAuth()
   @Get(':id')
-  async getOne(@Param('id', ParseIntPipe) id: number) {
-    return this.usersService.findById(id);
+  async getOneUser(@Param('id', ParseIntPipe) id: number) {
+    return this.usersService.findByIdAdmin(id);
   }
-
-  @Roles(Role.ADMIN, Role.SUPERADMIN, Role.USER)
+  
+  @Roles(Role.ADMIN, Role.SUPERADMIN, Role.TEACHER)
   @ApiBearerAuth()
   @Put(':id')
-  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateUserDto) {
-    return this.usersService.updateUser(id, dto);
+  updateUser(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateUserDto) {
+    return this.usersService.updateAdmin(id, dto);
   }
 
   @Roles(Role.ADMIN, Role.SUPERADMIN)
   @ApiBearerAuth()
   @Delete(':id')
-  async delete(@Param('id', ParseIntPipe) id: number) {
-    return this.usersService.deleteUser(id);
+  async deleteUser(@Param('id', ParseIntPipe) id: number) {
+    return this.usersService.deleteAdmin(id);
   }
 }
