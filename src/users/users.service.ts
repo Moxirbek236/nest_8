@@ -5,13 +5,7 @@ import { UpdateUserDto } from './dto/user.dto';
 @Injectable()
 export class UsersService {
   constructor(private prisma: PrismaService) {}
-
-  async createUser(data) {
-    return this.prisma.user.create({
-        data:data
-    });
-  }
-
+  
   async findAll() {
     return this.prisma.user.findMany();
   }
