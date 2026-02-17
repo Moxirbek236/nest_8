@@ -10,7 +10,6 @@ async function bootstrap() {
     .setTitle('School API')
     .setDescription('API for managing school data')
     .setVersion('1.0')
-    .addTag('school')
     .addBearerAuth()
     .build();
 
@@ -23,6 +22,6 @@ async function bootstrap() {
     },
   });
 
-  await app.listen(3000);
+  await app.listen(3333);
 }
 bootstrap();

@@ -45,6 +45,67 @@ export class TeachersService {
     });
   }
 
+  async findByEmail(email: string) {
+    return this.prisma.teacher.findUnique({ where: { email } });
+  }
+
+  async findById(id: number) {
+    const teacher = await this.prisma.teacher.findUnique({
+      where: { id },
+    });
+
+    if (!teacher) {
+      throw new NotFoundException('Teacher not found');
+    }
+    return teacher;
+  }
+
+  async findByPhone(phone: string) {
+    return this.prisma.teacher.findUnique({ where: { phone } });
+  }
+
+  async findAllActive() {
+    return this.prisma.teacher.findMany({
+      where: { status: 'active' },
+      select: {
+        id: true,
+        email: true,
+        first_name: true,
+        last_name: true,
+        phone: true,
+        address: true,
+      },
+    });
+  }
+
+  async findAllInactive() {
+    return this.prisma.teacher.findMany({
+      where: { status: 'inactive' },
+      select: {
+        id: true,
+        email: true,
+        first_name: true,
+        last_name: true,
+        phone: true,
+        address: true,
+      },
+    });
+  }
+
+  async findAllFreeze() {
+    return this.prisma.teacher.findMany({
+      where: { status: 'freeze' },
+      select: {
+        id: true,
+        email: true,
+        first_name: true,
+        last_name: true,
+        phone: true,
+        address: true,
+      },
+    });
+  }
+
   async findAll() {
     return this.prisma.teacher.findMany({
       select: {

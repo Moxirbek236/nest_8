@@ -69,6 +69,7 @@ model Course {
 model Room {
   id         Int      @id @default(autoincrement())
   name       String   @unique
+  status     Status   @default(active)
   created_at DateTime @default(now())
   update_at  DateTime @default(now())
   groups     Group[]
@@ -85,7 +86,7 @@ model Group {
   week_day      Json
   start_time    String
   max_student   Int
-  status        GroupStatus    @default(active)
+  status        GroupStatus    @default(planned)
   created_at    DateTime       @default(now())
   update_at     DateTime       @default(now())
   courses       Course         @relation(fields: [course_id], references: [id])
@@ -123,6 +124,7 @@ enum StudentStatus {
   inactive
   freeze
   graduated
+  cancelled
 }
 
 enum WeekDay {
@@ -145,4 +147,6 @@ enum GroupStatus {
   planned
   active
   completed
+  cancelled
+  freeze
 }
