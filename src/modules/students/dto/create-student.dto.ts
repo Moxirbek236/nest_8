@@ -1,5 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsEmail, IsMobilePhone, IsString, IsStrongPassword } from "class-validator";
+import {  StudentStatus } from "@prisma/client";
+import { IsDateString, IsEmail, IsMobilePhone, IsString, IsStrongPassword } from "class-validator";
 
 export class CreateStudentDto {
     @IsString()
@@ -23,6 +24,7 @@ export class CreateStudentDto {
     email: string
 
     @ApiProperty({ example: '2000-01-01' })
+    @IsDateString()
     birth_date: Date;
 
     @IsString()
@@ -31,4 +33,7 @@ export class CreateStudentDto {
 
     @ApiProperty({ type: 'string', format: 'binary' })
     photo: string;
+
+    @ApiProperty({ example: 'active' })
+    status: StudentStatus;
 }

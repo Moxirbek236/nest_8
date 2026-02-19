@@ -8,6 +8,9 @@ import {
   UseGuards,
   Put,
   UseInterceptors,
+  UploadedFile,
+  Req,
+  Query,
 } from '@nestjs/common';
 import { RegisterDto } from 'src/auth/dto/auth.dto';
 import {
@@ -21,12 +24,13 @@ import { AuthGuard } from 'src/common/guards/auth.guard';
 import { RolesGuard } from 'src/common/guards/role.guard';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { Role } from '@prisma/client';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { AnyFilesInterceptor, FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { StudentService } from './students.service';
 import { UpdateStudentDto } from './dto/update-student.dto';
 import { CreateStudentDto } from './dto/create-student.dto';
+import { QueryStudentDto } from './dto/query.dto';
 
 @ApiTags('Students')
 @UseGuards(AuthGuard, RolesGuard)
@@ -36,62 +40,52 @@ import { CreateStudentDto } from './dto/create-student.dto';
 export class StudentsController {
   constructor(private readonly studentsService: StudentService) {}
 
-  
   @ApiOperation({ summary: `${Role.SUPERADMIN}, ${Role.ADMIN}` })
   @Get('all')
-  findAll() {
-    return this.studentsService.findAll();
+  @Roles(Role.ADMIN, Role.SUPERADMIN)
+  findAll(@Query() search: QueryStudentDto) {
+    return this.studentsService.findAll(search);
   }
-  
+
   @ApiOperation({ summary: `${Role.SUPERADMIN}, ${Role.ADMIN}` })
   @Get('one/:id')
   findOne(@Param('id') id: string) {
     return this.studentsService.findOne(+id);
   }
-  
+
   @ApiOperation({ summary: `${Role.SUPERADMIN}, ${Role.ADMIN}` })
-  @Get('active')
-  findActive() {
-    return this.studentsService.findAllActive();
-  }
-  
-  @ApiOperation({ summary: `${Role.SUPERADMIN}, ${Role.ADMIN}` })
-  @Get('inactive')
+  @Get('archive')
   findInactive() {
     return this.studentsService.findAllInactive();
   }
-  
+
   @ApiOperation({ summary: `${Role.SUPERADMIN}, ${Role.ADMIN}` })
   @Get('freeze')
   findFreeze() {
     return this.studentsService.findAllFreeze();
   }
-  
+
   @ApiOperation({ summary: `${Role.SUPERADMIN}` })
   @UseGuards(AuthGuard)
   @ApiConsumes('multipart/form-data')
   @ApiBody({
-    description: 'List of create users DTO',
-    type: RegisterDto,
     schema: {
       type: 'object',
       properties: {
-        email: { type: 'string', example: 'user@example.com' },
-        password: { type: 'string', example: 'password123' },
         first_name: { type: 'string', example: 'John' },
         last_name: { type: 'string', example: 'Doe' },
+        email: { type: 'string', example: 'user@example.com' },
         phone: { type: 'string', example: '+1234567890' },
         address: { type: 'string', example: '123 Main St' },
-        avatar: {
-          type: 'string',
-          format: 'binary',
-          description: 'User avatar image',
-        },
+        birth_date: { type: 'string', format: 'date', example: '2000-12-31' },
+        password: { type: 'string', example: 'password123' },
+        photo: { type: 'string', format: 'binary', description: 'User avatar' },
       },
+      required: ['first_name', 'last_name', 'email', 'password', 'birth_date'],
     },
   })
   @UseInterceptors(
-    FileInterceptor('avatar', {
+    FileInterceptor('photo', {
       storage: diskStorage({
         destination: './uploads',
         filename: (req, file, cb) => {
@@ -107,11 +101,15 @@ export class StudentsController {
   @Post()
   @Roles(Role.ADMIN, Role.SUPERADMIN)
   @ApiBearerAuth()
-  create(@Body() createStudentDto: CreateStudentDto) {
-    return this.studentsService.create(createStudentDto);
+  create(
+    @Body() createStudentDto: CreateStudentDto,
+    @UploadedFile() photo: Express.Multer.File,
+    @Req() req: any,
+  ) {
+    return this.studentsService.create(createStudentDto, photo);
   }
-  @ApiOperation({ summary: `${Role.SUPERADMIN}, ${Role.ADMIN}` })
 
+  @ApiOperation({ summary: `${Role.SUPERADMIN}, ${Role.ADMIN}` })
   @Put(':id')
   update(@Param('id') id: string, @Body() updateStudentDto: UpdateStudentDto) {
     return this.studentsService.update(+id, updateStudentDto);

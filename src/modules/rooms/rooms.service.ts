@@ -3,13 +3,27 @@ import { CreateRoomDto } from './dto/create-room.dto';
 import { UpdateRoomDto } from './dto/update-room.dto';
 import { Status } from '@prisma/client';
 import { PrismaService } from 'src/core/prisma/prisma.service';
+import { QueryRoomDto } from './dto/query.dto';
 
 @Injectable()
 export class RoomsService {
   constructor(private prisma: PrismaService) {}
 
-  findAll() {
-    return this.prisma.room.findMany();
+  async findAll(filter: QueryRoomDto) {
+    const where: any = {};
+
+    if (filter.name) {
+      where.name = { contains: filter.name, mode: 'insensitive' };
+    }
+
+    if (filter.status) {
+      where.status = filter.status;
+    }
+
+    return this.prisma.room.findMany({
+      where,
+      orderBy: { id: 'asc' },
+    });
   }
 
   findAllByStatus(status: Status) {
@@ -36,22 +50,23 @@ export class RoomsService {
     return room;
   }
 
-  create(dto: CreateRoomDto) {
-    return this.prisma.room.create({
+  async create(dto: CreateRoomDto) {
+    return await this.prisma.room.create({
       data: dto,
     });
   }
 
-  update(id: number, dto: UpdateRoomDto) {
-    return this.prisma.room.update({
+  async update(id: number, dto: UpdateRoomDto) {
+    return await this.prisma.room.update({
       where: { id },
       data: dto,
     });
   }
 
-  remove(id: number) {
-    return this.prisma.room.delete({
+  async remove(id: number) {
+    await this.prisma.room.update({
       where: { id },
+      data: { status: 'inactive' },
     });
   }
 }

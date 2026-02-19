@@ -4,15 +4,24 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { UpdateTeacherDto } from './dto/teacher.dto';
-import { RegisterDto } from 'src/auth/dto/auth.dto';
+import { QueryAuthDto, RegisterDto } from 'src/auth/dto/auth.dto';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from 'src/core/prisma/prisma.service';
+import { EmailService } from 'src/common/email/email.service';
 
 @Injectable()
 export class TeachersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly emailService: EmailService,
+  ) {}
 
-  async create(dto: RegisterDto) {
+  async uploadAvatar(file: any): Promise<string> {
+    const filePath = `uploads/${file.filename}`;
+    return filePath;
+  }
+
+  async create(dto: RegisterDto, photo: Express.Multer.File) {
     const { email, password, address, first_name, last_name, phone } = dto;
 
     const existing = await this.prisma.teacher.findFirst({
@@ -23,7 +32,14 @@ export class TeachersService {
       throw new BadRequestException('Teacher already exists');
     }
 
+    if (!photo) {
+      throw new BadRequestException('Teacher photo is required');
+    }
     const hashedPassword = await bcrypt.hash(password, 10);
+
+    const avatarUrl = photo ? await this.uploadAvatar(photo) : null;
+
+    this.emailService.sendVerificationEmail(dto.email, dto.email, dto.password);
 
     return this.prisma.teacher.create({
       data: {
@@ -32,6 +48,7 @@ export class TeachersService {
         first_name,
         phone,
         address,
+        photo: avatarUrl,
         password: hashedPassword,
       },
       select: {
@@ -64,20 +81,6 @@ export class TeachersService {
     return this.prisma.teacher.findUnique({ where: { phone } });
   }
 
-  async findAllActive() {
-    return this.prisma.teacher.findMany({
-      where: { status: 'active' },
-      select: {
-        id: true,
-        email: true,
-        first_name: true,
-        last_name: true,
-        phone: true,
-        address: true,
-      },
-    });
-  }
-
   async findAllInactive() {
     return this.prisma.teacher.findMany({
       where: { status: 'inactive' },
@@ -106,8 +109,28 @@ export class TeachersService {
     });
   }
 
-  async findAll() {
+async findAll(filter: QueryAuthDto) {
+    const where: any = {};
+
+    if (filter.first_name) {
+      where.first_name = { contains: filter.first_name, mode: 'insensitive' };
+    }
+
+    if (filter.last_name) {
+      where.last_name = { contains: filter.last_name, mode: 'insensitive' };
+    }
+
+    if (filter.email) {
+      where.email = filter.email;
+    }
+
+    if (filter.status) {
+      where.status = filter.status;
+    }
+
     return this.prisma.teacher.findMany({
+      where,
+      orderBy: { id: 'asc' },
       select: {
         id: true,
         first_name: true,
@@ -115,10 +138,11 @@ export class TeachersService {
         email: true,
         phone: true,
         address: true,
+        status: true,
+        photo: true,
       },
     });
   }
-
   async findOne(id: number) {
     const teacher = await this.prisma.teacher.findUnique({
       where: { id },
@@ -171,8 +195,9 @@ export class TeachersService {
       throw new NotFoundException('Teacher not found');
     }
 
-    await this.prisma.teacher.delete({
+    await this.prisma.teacher.update({
       where: { id },
+      data: { status: 'inactive' },
     });
 
     return { message: 'Teacher deleted successfully' };

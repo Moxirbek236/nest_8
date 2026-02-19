@@ -1,5 +1,14 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsNotEmpty, MinLength } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Status, StudentStatus } from '@prisma/client';
+import {
+  IsDateString,
+  IsEmail,
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  MinLength,
+} from 'class-validator';
 
 export class RegisterDto {
   @ApiProperty({ example: 'John' })
@@ -37,4 +46,27 @@ export class LoginDto {
 
   @IsNotEmpty()
   password: string;
+}
+
+export class QueryAuthDto {
+  @IsOptional()
+  @IsString()
+  @ApiPropertyOptional({ description: 'Filter by first name' })
+  first_name?: string;
+
+  @IsOptional()
+  @IsString()
+  @ApiPropertyOptional({ description: 'Filter by last name' })
+  last_name?: string;
+
+  @IsOptional()
+  @IsEmail()
+  @ApiPropertyOptional({ description: 'Filter by email' })
+  email?: string;
+
+
+  @IsOptional()
+  @IsEnum(Status)
+  @ApiPropertyOptional({ enum: Status, description: "Filter by course status" })
+  status?: Status;
 }

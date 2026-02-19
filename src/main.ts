@@ -7,13 +7,13 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   const config = new DocumentBuilder()
-    .setTitle('School API')
+    .setTitle('CRM API')
     .setDescription('API for managing school data')
     .setVersion('1.0')
     .addBearerAuth()
     .build();
 
-  app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
+  app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
   const document = SwaggerModule.createDocument(app, config);
 
   SwaggerModule.setup('api', app, document, {

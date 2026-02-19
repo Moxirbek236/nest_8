@@ -9,6 +9,8 @@ import { MulterModule } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { RoomsModule } from './modules/rooms/rooms.module';
+import { CoursesModule } from './modules/courses/courses.module';
+import { GroupsModule } from './modules/groups/groups.module';
 
 @Module({
   imports: [
@@ -33,6 +35,8 @@ import { RoomsModule } from './modules/rooms/rooms.module';
     TeachersModule,
     StudentsModule,
     RoomsModule,
+    CoursesModule,
+    GroupsModule,
   ],
 })
 export class AppModule {}

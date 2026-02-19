@@ -10,6 +10,8 @@ import {
   Post,
   UseInterceptors,
   UploadedFile,
+  Req,
+  Query,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { AuthGuard } from 'src/common/guards/auth.guard';
@@ -24,10 +26,11 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
-import { RegisterDto } from 'src/auth/dto/auth.dto';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { QueryAuthDto, RegisterDto } from 'src/auth/dto/auth.dto';
+import { AnyFilesInterceptor, FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
+import { QueryCourseDto } from '../courses/dto/query.dto';
 
 @ApiTags('Admins')
 @Controller('users')
@@ -35,14 +38,12 @@ import { extname } from 'path';
 export class UsersController {
   constructor(private usersService: UsersService) {}
 
-  @ApiOperation({ summary: `${Role.SUPERADMIN}` })
+  @ApiOperation({ summary: `${Role.SUPERADMIN}, ${Role.ADMIN}` })
   @Get('all')
   @Roles(Role.ADMIN, Role.SUPERADMIN)
-  @ApiBearerAuth()
-  async getAllUsers() {
-    return this.usersService.findAllAdmins();
+  findAll(@Query() search: QueryAuthDto) {
+    return this.usersService.findAll(search);
   }
-
   @ApiOperation({ summary: `${Role.SUPERADMIN}` })
   @Get('all/inactive')
   @Roles(Role.ADMIN, Role.SUPERADMIN)
@@ -51,13 +52,6 @@ export class UsersController {
     return this.usersService.findAllInActiveAdmins();
   }
 
-  @ApiOperation({ summary: `${Role.SUPERADMIN}` })
-  @Get('all/active')
-  @Roles(Role.ADMIN, Role.SUPERADMIN)
-  @ApiBearerAuth()
-  async getActiveUsers() {
-    return this.usersService.findAllActiveAdmins();
-  }
 
   @ApiOperation({ summary: `${Role.SUPERADMIN}` })
   @Get('all/freeze')
@@ -114,11 +108,17 @@ export class UsersController {
   )
   @Post()
   @Roles(Role.ADMIN, Role.SUPERADMIN)
+  @UseInterceptors(AnyFilesInterceptor())
+
   @ApiBearerAuth()
   async createUser(
-    @Body() dto: RegisterDto,
+    // @Body() dto: RegisterDto,
+    @Req() req: any,
+    @Body() body: any,
     @UploadedFile() photo: Express.Multer.File,
   ) {
+    const dto = new RegisterDto();
+    Object.assign(dto, body);
     return this.usersService.createAdmin(dto, photo);
   }
 

@@ -9,10 +9,12 @@ import {
   UseGuards,
   Put,
   UseInterceptors,
+  UploadedFile,
+  Query,
 } from '@nestjs/common';
 import { TeachersService } from './teachers.service';
 import { UpdateTeacherDto } from './dto/teacher.dto';
-import { RegisterDto } from 'src/auth/dto/auth.dto';
+import { QueryAuthDto, RegisterDto } from 'src/auth/dto/auth.dto';
 import {
   ApiBearerAuth,
   ApiBody,
@@ -36,11 +38,11 @@ import { extname } from 'path';
 export class TeachersController {
   constructor(private readonly teachersService: TeachersService) {}
 
-  
   @ApiOperation({ summary: `${Role.SUPERADMIN}, ${Role.ADMIN}` })
   @Get('all')
-  findAll() {
-    return this.teachersService.findAll();
+  @Roles(Role.ADMIN, Role.SUPERADMIN)
+  findAll(@Query() search: QueryAuthDto) {
+    return this.teachersService.findAll(search);
   }
   
   @ApiOperation({ summary: `${Role.SUPERADMIN}, ${Role.ADMIN}` })
@@ -48,13 +50,7 @@ export class TeachersController {
   findOne(@Param('id') id: string) {
     return this.teachersService.findOne(+id);
   }
-  
-  @ApiOperation({ summary: `${Role.SUPERADMIN}, ${Role.ADMIN}` })
-  @Get('active')
-  findActive() {
-    return this.teachersService.findAllActive();
-  }
-  
+
   @ApiOperation({ summary: `${Role.SUPERADMIN}, ${Role.ADMIN}` })
   @Get('inactive')
   findInactive() {
@@ -91,7 +87,7 @@ export class TeachersController {
     },
   })
   @UseInterceptors(
-    FileInterceptor('avatar', {
+    FileInterceptor('photo', {
       storage: diskStorage({
         destination: './uploads',
         filename: (req, file, cb) => {
@@ -107,8 +103,8 @@ export class TeachersController {
   @Post()
   @Roles(Role.ADMIN, Role.SUPERADMIN)
   @ApiBearerAuth()
-  create(@Body() createTeacherDto: RegisterDto) {
-    return this.teachersService.create(createTeacherDto);
+  create(@Body() createTeacherDto: RegisterDto, @UploadedFile() photo: Express.Multer.File) {
+    return this.teachersService.create(createTeacherDto, photo);
   }
   @ApiOperation({ summary: `${Role.SUPERADMIN}, ${Role.ADMIN}` })
 

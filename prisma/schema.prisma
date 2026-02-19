@@ -104,6 +104,7 @@ model StudentGroup {
   update_at  DateTime @default(now())
   groups     Group    @relation(fields: [group_id], references: [id])
   students   Student  @relation(fields: [student_id], references: [id])
+  @@unique([student_id, group_id])
 }
 
 enum CourseLevel {

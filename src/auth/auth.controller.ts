@@ -27,8 +27,6 @@ export class AuthController {
   @ApiBearerAuth()
   @Get(`me`)
   async getMe(@Req() req) {
-    console.log(req);
-
     return this.authService.getMe(req.user.id);
   }
 }

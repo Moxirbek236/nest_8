@@ -2,12 +2,12 @@ import {
   Controller,
   Get,
   Body,
-  Patch,
   Param,
   Delete,
   Post,
   ParseIntPipe,
   Put,
+  Query,
 } from '@nestjs/common';
 import { RoomsService } from './rooms.service';
 import { CreateRoomDto } from './dto/create-room.dto';
@@ -15,6 +15,7 @@ import { UpdateRoomDto } from './dto/update-room.dto';
 import { Role, Status } from '@prisma/client';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Roles } from 'src/common/decorators/roles.decorator';
+import { QueryRoomDto } from './dto/query.dto';
 
 @ApiBearerAuth()
 @ApiTags('Rooms')
@@ -22,35 +23,28 @@ import { Roles } from 'src/common/decorators/roles.decorator';
 export class RoomsController {
   constructor(private readonly roomsService: RoomsService) {}
 
-  @ApiOperation({ summary: `${Role.SUPERADMIN}` })
+  @ApiOperation({ summary: `${Role.SUPERADMIN}, ${Role.ADMIN}` })
   @Get('all')
   @Roles(Role.ADMIN, Role.SUPERADMIN)
-  findAll() {
-    return this.roomsService.findAll();
+  findAll(@Query() search: QueryRoomDto) {
+    return this.roomsService.findAll(search);
   }
 
-  @ApiOperation({ summary: `${Role.SUPERADMIN}` })
-  @Get('all/active')
-  @Roles(Role.ADMIN, Role.SUPERADMIN)
-  findAllActive() {
-    return this.roomsService.findAllByStatus(Status.active);
-  }
-
-  @ApiOperation({ summary: `${Role.SUPERADMIN}` })
-  @Get('all/inactive')
+  @ApiOperation({ summary: `${Role.SUPERADMIN}, ${Role.ADMIN}` })
+  @Get('all/archive')
   @Roles(Role.ADMIN, Role.SUPERADMIN)
   findAllInactive() {
     return this.roomsService.findAllByStatus(Status.inactive);
   }
 
-  @ApiOperation({ summary: `${Role.SUPERADMIN}` })
+  @ApiOperation({ summary: `${Role.SUPERADMIN}, ${Role.ADMIN}` })
   @Get('all/freeze')
   @Roles(Role.ADMIN, Role.SUPERADMIN)
   findAllFreeze() {
     return this.roomsService.findAllByStatus(Status.freeze);
   }
 
-  @ApiOperation({ summary: `${Role.SUPERADMIN}` })
+  @ApiOperation({ summary: `${Role.SUPERADMIN}, ${Role.ADMIN}` })
   @Get('one/:id')
   @Roles(Role.ADMIN, Role.SUPERADMIN)
   findOne(@Param('id', ParseIntPipe) id: number) {
