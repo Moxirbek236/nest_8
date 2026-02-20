@@ -1,28 +1,42 @@
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
+import { CanActivate, ExecutionContext, ForbiddenException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
+import { PrismaService } from 'src/core/prisma/prisma.service';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-  constructor(private jwtService: JwtService, private reflector: Reflector) {}
+  constructor(
+    private readonly jwtService: JwtService,
+    private readonly prisma: PrismaService
+  ) { }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest<Request>();
-    const authHeader = request.headers['authorization'];
-
-    if (!authHeader) return false;
-
-    const [type, token] = authHeader.split(' ');
+    const request: Request = context.switchToHttp().getRequest()
+    const token = request.headers.authorization?.split(" ")[1]
     
-    if (type !== 'Bearer' || !token) return false;
+    if (!token) {
+      throw new UnauthorizedException("token not found")
+    }
 
     try {
-      const payload = await this.jwtService.verify(token);
-      request['user'] = payload;
-      return true;
-    } catch (err) {
-      return false;
+      const data = this.jwtService.verify(token, { secret: process.env.JWT_SECRET })
+      
+      const user = await this.prisma.user.findUnique({ 
+        where: { id: data.id }
+      })
+
+      if (!user) {
+        throw new UnauthorizedException("user not foun")
+      }
+
+      request['user'] = user
+
+      return true
+    } catch (error) {
+      if (error instanceof UnauthorizedException) {
+        throw error
+      }
+      throw new UnauthorizedException(error)
     }
   }
 }

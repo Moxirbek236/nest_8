@@ -34,20 +34,22 @@ import { QueryCourseDto } from '../courses/dto/query.dto';
 
 @ApiTags('Admins')
 @Controller('users')
-@UseGuards(AuthGuard, RolesGuard)
+@ApiBearerAuth()
 export class UsersController {
   constructor(private usersService: UsersService) {}
-
+  
   @ApiOperation({ summary: `${Role.SUPERADMIN}, ${Role.ADMIN}` })
-  @Get('all')
   @Roles(Role.ADMIN, Role.SUPERADMIN)
+  @UseGuards(AuthGuard, RolesGuard)
+  @Get('all')
   findAll(@Query() search: QueryAuthDto) {
     return this.usersService.findAll(search);
   }
+
+
   @ApiOperation({ summary: `${Role.SUPERADMIN}` })
-  @Get('all/inactive')
   @Roles(Role.ADMIN, Role.SUPERADMIN)
-  @ApiBearerAuth()
+  @Get('all/inactive')
   async getInActiveUsers() {
     return this.usersService.findAllInActiveAdmins();
   }
@@ -56,14 +58,12 @@ export class UsersController {
   @ApiOperation({ summary: `${Role.SUPERADMIN}` })
   @Get('all/freeze')
   @Roles(Role.ADMIN, Role.SUPERADMIN)
-  @ApiBearerAuth()
   async getFreezeUsers() {
     return this.usersService.findAllFreezeAdmins();
   }
 
   @ApiOperation({ summary: `${Role.SUPERADMIN}` })
   @Roles(Role.ADMIN, Role.SUPERADMIN, Role.TEACHER)
-  @ApiBearerAuth()
   @Get('one/:id')
   async getOneUser(@Param('id', ParseIntPipe) id: number) {
     return this.usersService.findByIdAdmin(id);
@@ -110,7 +110,6 @@ export class UsersController {
   @Roles(Role.ADMIN, Role.SUPERADMIN)
   @UseInterceptors(AnyFilesInterceptor())
 
-  @ApiBearerAuth()
   async createUser(
     // @Body() dto: RegisterDto,
     @Req() req: any,
@@ -124,7 +123,6 @@ export class UsersController {
 
   @ApiOperation({ summary: `${Role.SUPERADMIN}` })
   @Roles(Role.ADMIN, Role.SUPERADMIN, Role.TEACHER)
-  @ApiBearerAuth()
   @Put(':id')
   updateUser(
     @Param('id', ParseIntPipe) id: number,
@@ -135,7 +133,6 @@ export class UsersController {
 
   @ApiOperation({ summary: `${Role.SUPERADMIN}` })
   @Roles(Role.ADMIN, Role.SUPERADMIN)
-  @ApiBearerAuth()
   @Delete(':id')
   async deleteUser(@Param('id', ParseIntPipe) id: number) {
     return this.usersService.deleteAdmin(id);

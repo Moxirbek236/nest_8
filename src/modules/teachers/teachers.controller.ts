@@ -11,6 +11,7 @@ import {
   UseInterceptors,
   UploadedFile,
   Query,
+  Req,
 } from '@nestjs/common';
 import { TeachersService } from './teachers.service';
 import { UpdateTeacherDto } from './dto/teacher.dto';
@@ -43,6 +44,12 @@ export class TeachersController {
   @Roles(Role.ADMIN, Role.SUPERADMIN)
   findAll(@Query() search: QueryAuthDto) {
     return this.teachersService.findAll(search);
+  }
+
+  @Get('me')
+  @Roles(Role.ADMIN, Role.SUPERADMIN)
+  findMe(@Req() req) {
+    return this.teachersService.findMe(req.user.id);
   }
   
   @ApiOperation({ summary: `${Role.SUPERADMIN}, ${Role.ADMIN}` })

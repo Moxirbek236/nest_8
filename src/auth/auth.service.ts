@@ -55,7 +55,10 @@ export class AuthService {
     if (!valid) throw new UnauthorizedException('Invalid credentials');
 
     const payload = { id: user.id, email: user.email, role: user.role };
-    return { access_token: this.jwtService.sign(payload) };
+    return { access_token: this.jwtService.sign(payload, {
+      secret:process.env.JWT_SECRET,
+      expiresIn:"1d"
+    }) };
   }
 
     async getMe(id: number) {

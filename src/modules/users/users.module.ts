@@ -7,7 +7,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { EmailModule } from 'src/common/email/email.module';
 
 @Module({
-  imports: [PrismaModule, forwardRef(() => AuthModule), JwtModule, EmailModule],
+  imports: [PrismaModule, EmailModule],
   controllers: [UsersController],
   providers: [UsersService],
   exports: [UsersService],

@@ -3,11 +3,10 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
   Delete,
-  Req,
   UseInterceptors,
+  Put,
 } from '@nestjs/common';
 import { StudentGroupService } from './student-group.service';
 import { CreateStudentGroupDto } from './dto/create-student-group.dto';
@@ -25,6 +24,8 @@ export class StudentGroupController {
   @UseInterceptors(FilesInterceptor('files'))
   @Post()
   create(@Body() createStudentGroupDto: CreateStudentGroupDto) {
+    console.log(createStudentGroupDto);
+    
     return this.studentGroupService.create(createStudentGroupDto);
   }
 
@@ -38,7 +39,7 @@ export class StudentGroupController {
     return this.studentGroupService.findOne(+id);
   }
 
-  @Patch(':id')
+  @Put(':id')
   update(
     @Param('id') id: string,
     @Body() updateStudentGroupDto: UpdateStudentGroupDto,

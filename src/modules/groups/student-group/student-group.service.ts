@@ -6,9 +6,8 @@ import { Status } from '@prisma/client';
 
 @Injectable()
 export class StudentGroupService {
-  constructor(private readonly prisma : PrismaService) {}
+  constructor(private readonly prisma: PrismaService) {}
   async create(createStudentGroupDto: CreateStudentGroupDto) {
-    
     const existStudentGroup = await this.prisma.group.findFirst({
       where: {
         id: createStudentGroupDto.group_id,
@@ -43,28 +42,80 @@ export class StudentGroupService {
       throw new BadRequestException('Student already in group');
     }
 
-    // await this.prisma.studentGroup.create({
-    //   data: createStudentGroupDto,
-    // });
+    await this.prisma.studentGroup.create({
+      data: createStudentGroupDto,
+    });
 
-    return {status: 200, success: true, message: "Student group created successfully"};
+    return {
+      status: 200,
+      success: true,
+      message: 'Student group created successfully',
+    };
   }
 
-  findAll() {
-    return this.prisma.studentGroup.findMany({
+  async findAll() {
+    const data = await this.prisma.studentGroup.findMany({
       where: { status: Status.active },
     });
+
+    return {
+      status: 200,
+      success: true,
+      data
+    };
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} studentGroup`;
+  async findOne(id: number) {
+    const data = await this.prisma.studentGroup.findUnique({
+      where: { id, status: Status.active },
+    });
+    return {
+      status: 200,
+      success: true,
+      data,
+    };
   }
 
-  update(id: number, updateStudentGroupDto: UpdateStudentGroupDto) {
-    return `This action updates a #${id} studentGroup`;
+  async update(id: number, updateStudentGroupDto: UpdateStudentGroupDto) {
+    await this.prisma.studentGroup
+      .update({
+        where: { id, status: Status.active },
+        data: updateStudentGroupDto,
+      })
+      .catch(() => {
+        throw new BadRequestException('Student group not found or inactive');
+      });
+
+    return {
+      status: 200,
+      success: true,
+      message: 'Student group updated successfully',
+    };
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} studentGroup`;
+  async remove(id: number) {
+    // await this.prisma.studentGroup
+    //   .delete({
+    //     where: { id },
+    //   })
+    //   .catch(() => {
+    //     throw new BadRequestException('Student group not found');
+    //   });
+
+    //   return {
+    //     status: 200,
+    //     success: true,
+    //     message: 'Student group removed successfully',
+    //   };
+    await this.prisma.studentGroup.update({
+      where: { id, status: Status.active },
+      data: { status: Status.inactive },
+    });
+
+    return {
+      status: 200,
+      success: true,
+      message: 'Student group removed successfully',
+    };
   }
 }

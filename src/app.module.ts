@@ -11,6 +11,10 @@ import { extname } from 'path';
 import { RoomsModule } from './modules/rooms/rooms.module';
 import { CoursesModule } from './modules/courses/courses.module';
 import { GroupsModule } from './modules/groups/groups.module';
+import { LessonsModule } from './modules/lessons/lessons.module';
+import { JwtModule } from '@nestjs/jwt';
+import { AttendanceModule } from './modules/attendance/attendance.module';
+import { HomeworkModule } from './modules/homework/homework.module';
 
 @Module({
   imports: [
@@ -29,6 +33,7 @@ import { GroupsModule } from './modules/groups/groups.module';
         fileSize: 10 * 1024 * 1024,
       },
     }),
+    JwtModule.register({ secret: process.env.JWT_SECRET }),
     AuthModule,
     PrismaModule,
     UsersModule,
@@ -37,6 +42,9 @@ import { GroupsModule } from './modules/groups/groups.module';
     RoomsModule,
     CoursesModule,
     GroupsModule,
+    LessonsModule,
+    AttendanceModule,
+    HomeworkModule,
   ],
 })
 export class AppModule {}

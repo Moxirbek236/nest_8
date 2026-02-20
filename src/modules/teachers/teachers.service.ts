@@ -21,6 +21,40 @@ export class TeachersService {
     return filePath;
   }
 
+  async findMe(id: number) {
+    const existTeacher = await this.prisma.teacher.findUnique({
+      where: { id },
+    });
+
+    if (!existTeacher) {
+      throw new NotFoundException('Teacher not found');
+    }
+    const teacher = await this.prisma.teacher.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        first_name: true,
+        last_name: true,
+        email: true,
+        phone: true,
+        address: true,
+        status: true,
+        photo: true,
+        groups: {
+          select: {
+            id: true,
+            courses: true,
+            rooms: true,
+            start_date: true,
+            start_time: true,
+            week_day: true,
+          },
+        },
+      },
+    });
+    return teacher;
+  }
+
   async create(dto: RegisterDto, photo: Express.Multer.File) {
     const { email, password, address, first_name, last_name, phone } = dto;
 
@@ -109,7 +143,7 @@ export class TeachersService {
     });
   }
 
-async findAll(filter: QueryAuthDto) {
+  async findAll(filter: QueryAuthDto) {
     const where: any = {};
 
     if (filter.first_name) {
